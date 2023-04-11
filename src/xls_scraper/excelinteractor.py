@@ -25,17 +25,6 @@ class ExcelInteract:
         tmp = tempfile.NamedTemporaryFile(delete=False)
         shutil.copy2(self.file_name, tmp.name)
         return tmp
-    
-    def __col_title_to_number(self, col_title: str)->int:
-        ans = 0
-        for i in col_title:
-            ans = ans * 26 + ord(i) - 64
-        return ans
-
-    def __parse_cel_name(self, cel_name: str)->tuple[str,int]:
-        c = cel_name.rstrip('0123456789')
-        r = cel_name[len(c):]
-        return c, r
 
     def value_from_worksheet(self, wb):
         ws = wb.Worksheets(1)
@@ -59,9 +48,19 @@ with eint.open() as wb:
     ws = wb.Worksheets("Hoja1")
     sheet_names = [sheet.Name for sheet in wb.Sheets]
     print(sheet_names)
-    print(ws.Cells(1,1).Value)
+    ws.Cells(*eint.parse_cel_name("A2")).Value = 10
+    ws.Range("A2:C2").Value = [5, 6, 3]
     print(list(map(list, ws.Range("A1:E5").Value)))
     print(pd.DataFrame(ws.Range("A1:E5").Value))
+    ""
 
-    
+# %%
+from cellnameparser import CellNameParser, CellRangeParser, CellParserStrategy
 
+cellparser_strgs:list[CellParserStrategy]  = [CellNameParser(),CellRangeParser()]
+cell = "A1"
+vaid_strg = next(
+      (strg for strg in cellparser_strgs if strg.valid(cell)),
+      None)
+
+vaid_strg.parse(cell)
